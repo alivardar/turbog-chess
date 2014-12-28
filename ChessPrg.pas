@@ -1,0 +1,256 @@
+unit ChessPrg;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls,  ExtCtrls, ChessBrd, Spin, Menus, IniFiles;
+
+type
+  TMainForm = class(TForm)
+    ListBox1: TListBox;
+    ChessBrd1: TChessBrd;
+    PieceSoft: TImage;
+    PieceClassic: TImage;
+    MainMenu1: TMainMenu;
+    File1: TMenuItem;
+    Edit1: TMenuItem;
+    Options1: TMenuItem;
+    Help1: TMenuItem;
+    About1: TMenuItem;
+    Settings1: TMenuItem;
+    PieceSet1: TMenuItem;
+    SoftPieces1: TMenuItem;
+    Classic1: TMenuItem;
+    Regular1: TMenuItem;
+    Exit1: TMenuItem;
+    Game1: TMenuItem;
+    NewGame1: TMenuItem;
+    N1: TMenuItem;
+    Undo1: TMenuItem;
+    Redo1: TMenuItem;
+    Stop1: TMenuItem;
+    N2: TMenuItem;
+    Play1: TMenuItem;
+    Label1: TLabel;
+    procedure UpdateListBox;
+    procedure ChessBrd1LegalMove(Sender: TObject; oldSq, newSq: Square);
+    procedure ChessBrd1Draw(Sender: TObject);
+    procedure ChessBrd1Mate(Sender: TObject; oldSq, newSq: Square);
+    procedure Timer1Timer(Sender: TObject);
+    procedure ListBox1Click(Sender: TObject);
+    procedure ChessBrd1CalculateMove(Sender: TObject; var oldsq,
+      newsq: Square);
+    procedure ChessBrd1CalculationFailed(Sender: TObject; oldSq,
+      newSq: Square);
+    procedure Exit1Click(Sender: TObject);
+    procedure About1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure Settings1Click(Sender: TObject);
+    procedure SoftPieces1Click(Sender: TObject);
+    procedure Classic1Click(Sender: TObject);
+    procedure Regular1Click(Sender: TObject);
+    procedure Undo1Click(Sender: TObject);
+    procedure Redo1Click(Sender: TObject);
+    procedure Stop1Click(Sender: TObject);
+    procedure NewGame1Click(Sender: TObject);
+    procedure Play1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  MainForm: TMainForm;
+
+implementation
+
+uses AboutUnit, SettingsUnit;
+
+{$R *.DFM}
+
+
+procedure TMainForm.UpdateListBox;
+var
+    list: TStringList;
+begin
+    list:=TStringList.Create;
+    Chessbrd1.GetMoveList(list);
+    ListBox1.Items:=list;
+    list.Free;
+end;
+
+procedure TMainForm.ChessBrd1LegalMove(Sender: TObject; oldSq, newSq: Square);
+begin
+     UpdateListBox;
+end;
+
+procedure TMainForm.ChessBrd1Draw(Sender: TObject);
+begin
+     MessageDlg('Draw',mtInformation,[mbOk],0);
+     Chessbrd1.NewGame;
+end;
+
+procedure TMainForm.ChessBrd1Mate(Sender: TObject; oldSq, newSq: Square);
+begin
+     MessageDlg('Mate',mtInformation,[mbOk],0);
+     Chessbrd1.NewGame;
+end;
+
+procedure TMainForm.Timer1Timer(Sender: TObject);
+begin
+    Label1.Caption:=IntToStr(integer(Chessbrd1.Thinking));
+end;
+
+procedure TMainForm.ListBox1Click(Sender: TObject);
+begin
+    Chessbrd1.GotoMove(1+(ListBox1.ItemIndex+1) shr 1,((ListBox1.ItemIndex+1) mod 2)=0);
+end;
+
+
+procedure TMainForm.ChessBrd1CalculateMove(Sender: TObject; var oldsq,
+  newsq: Square);
+begin
+    while (Chessbrd1.moveIsLegal(oldsq,newsq)=FALSE) do
+    begin
+        oldSq:=Square(random(65));
+        newSq:=Square(random(65));
+    end;
+end;
+
+procedure TMainForm.ChessBrd1CalculationFailed(Sender: TObject; oldSq,
+  newSq: Square);
+begin
+//
+end;
+
+procedure TMainForm.Exit1Click(Sender: TObject);
+begin
+Close;
+end;
+
+procedure TMainForm.About1Click(Sender: TObject);
+begin
+AboutForm.Showmodal;
+end;
+
+procedure TMainForm.FormCreate(Sender: TObject);
+var
+  Ini      : TIniFile;
+  WhiteOnTop, ShowBoardLines : Boolean;
+  ThinkDeep, Player1, Player2, PieceSet : String;
+begin
+
+try
+   Ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'TurboGChess.ini');
+
+   WhiteOnTop := Ini.ReadBool('General','WhiteOnTop', False);
+   ShowBoardLines := Ini.ReadBool('General','ShowBoardLines', False);
+
+   ThinkDeep := Ini.ReadString('General','ThinkDeep','');
+   Player1 := Ini.ReadString('General','Player1','');
+   Player2 := Ini.ReadString('General','Player2','');
+   PieceSet := Ini.ReadString('General','PieceSet','');
+finally
+   Ini.Free;
+end;
+
+
+if (ThinkDeep='') or (Player1='') or (PieceSet='') then
+begin
+   Ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'TurboGChess.ini');
+    try
+      Ini.WriteBool('General', 'WhiteOnTop', False);
+      Ini.WriteBool('General', 'ShowBoardLines', False);
+      Ini.WriteString('General', 'ThinkDeep', '5');
+      Ini.WriteString('General', 'Player1', '1');
+      Ini.WriteString('General', 'Player2', '0');
+      Ini.WriteString('General', 'PieceSet', '1');
+    finally
+      Ini.Free;
+    end;
+
+  //Default values
+  WhiteonTop:=False;
+  ShowBoardLines:=False;
+  ThinkDeep:='5';
+  Player1:='1';   Player2:='0';   PieceSet:='1';
+end;
+
+
+//Players human or computer
+Chessbrd1.ComputerPlaysBlack:=Boolean(StrtoInt(Player1));
+Chessbrd1.ComputerPlaysWhite:=Boolean(StrtoInt(Player2));
+
+//Chess piece sets
+if (PieceSet='0') then Chessbrd1.CustomPieceSet:=nil;
+if (PieceSet='1') then Chessbrd1.CustomPieceSet:=PieceSoft.Picture.Bitmap;
+if (PieceSet='2') then Chessbrd1.CustomPieceSet:=PieceClassic.Picture.Bitmap;
+
+//Think Depth
+Chessbrd1.SearchDepth:=StrtoInt(ThinkDeep);
+
+//White on Top
+Chessbrd1.WhiteOnTop:=WhiteOnTop;
+
+//Show board Lines
+Chessbrd1.BoardLines:=ShowBoardLines;
+
+end;
+
+procedure TMainForm.Settings1Click(Sender: TObject);
+begin
+SettingsForm.Showmodal;
+end;
+
+procedure TMainForm.SoftPieces1Click(Sender: TObject);
+begin
+Chessbrd1.CustomPieceSet:=PieceSoft.Picture.Bitmap;
+end;
+
+procedure TMainForm.Classic1Click(Sender: TObject);
+begin
+Chessbrd1.CustomPieceSet:=PieceClassic.Picture.Bitmap;
+end;
+
+procedure TMainForm.Regular1Click(Sender: TObject);
+begin
+Chessbrd1.CustomPieceSet:=nil;  
+end;
+
+procedure TMainForm.Undo1Click(Sender: TObject);
+begin
+     Chessbrd1.MoveBackward;
+     UpdateListBox;
+end;
+
+procedure TMainForm.Redo1Click(Sender: TObject);
+begin
+    Chessbrd1.MoveForward;
+    UpdateListBox;
+end;
+
+procedure TMainForm.Stop1Click(Sender: TObject);
+begin
+    Chessbrd1.CancelThinking;
+end;
+
+procedure TMainForm.NewGame1Click(Sender: TObject);
+begin
+    Chessbrd1.NewGame;
+    UpdateListBox;
+end;
+
+procedure TMainForm.Play1Click(Sender: TObject);
+begin
+    Chessbrd1.Think;
+end;
+
+procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+Action:=caFree;
+end;
+
+end.

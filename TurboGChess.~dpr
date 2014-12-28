@@ -1,0 +1,16 @@
+program TurboGChess;
+
+uses
+  Forms,
+  ChessPrg in 'ChessPrg.pas' {MainForm},
+  ChessBrd in '..\chessbrd.pas',
+  AboutUnit in 'AboutUnit.pas' {AboutForm};
+
+{$R *.RES}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TMainForm, MainForm);
+  Application.CreateForm(TAboutForm, AboutForm);
+  Application.Run;
+end.
