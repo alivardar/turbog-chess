@@ -9,6 +9,4 @@ Chess pieces designed and sizes changed for good view.TurboG Chess Application
 
 To do :  Network capability, server integration, different chess tables, chess pieces
 
-http://forum.turbog.com
-
-![Alt text](http://www.turbog.com/wp-content/uploads/2012/05/TurboGChess-150x150.png "TurboG Chess")
+![Alt text](http://www.md5m.com/wp-content/uploads/2012/05/TurboGChess-150x150.png "TurboG Chess")
